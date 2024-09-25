@@ -18,7 +18,20 @@ R     t   a            b
 240 	90	-0,15625	    127,5
 176 	100	 расчет не возможен, нет следующих диапазона
 */
+const int RESISTANCE_DTOJ[] = {9420, 5670, 3520, 2238, 1458, 972, 668, 458, 332, 240, 176};
 
+/* пересчет сопротивления в температуру для датчика ДТОЖ */
+int r2t(int r)
+{
+  for (int i = 0; i < sizeof(RESISTANCE_DTOJ) / sizeof(int); ++i)
+  {
+    if (RESISTANCE_DTOJ[i] == r)
+    {
+      return i * 10;
+    }
+  }
+  return 42;
+}
 
 void setup() {
   Serial.begin(9600); // Инициализация последовательной связи
@@ -26,9 +39,9 @@ void setup() {
 
 void loop() {
   int sensorValue = analogRead(sensorPin); // Считываем значение с датчика
-  float voltage = sensorValue * (5.0 / 1023.0); // Пересчитываем значение в напряжение (при предположении, что используется 5 вольт)
-  Serial.print("Voltage: ");
-  Serial.print(voltage);
-  Serial.println(" V");
+//  float voltage = sensorValue * (5.0 / 1023.0); // Пересчитываем значение в напряжение (при предположении, что используется 5 вольт)
+  Serial.print("Temperature: ");
+  Serial.print(r2t(2238));
+  Serial.println(" C");
   delay(1000); // Задержка для устранения эффекта "дребезга"
 }
