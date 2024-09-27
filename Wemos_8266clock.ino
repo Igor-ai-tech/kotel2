@@ -21,8 +21,12 @@ R     t   a            b
 const int RESISTANCE_DTOJ[] = {9420, 5670, 3520, 2238, 1458, 972, 668, 458, 332, 240, 176};
 
 /* пересчет сопротивления в температуру для датчика ДТОЖ */
-int r2t(int r)
+int r2t(int *r)
 {
+  *r += 1;
+  Serial.print("R: ");
+  Serial.print(*r);
+  Serial.println(" Ohm");
   for (int i = 0; i < sizeof(RESISTANCE_DTOJ) / sizeof(int); ++i)
   {
     if (RESISTANCE_DTOJ[i] == r)
@@ -40,8 +44,16 @@ void setup() {
 void loop() {
   int sensorValue = analogRead(sensorPin); // Считываем значение с датчика
 //  float voltage = sensorValue * (5.0 / 1023.0); // Пересчитываем значение в напряжение (при предположении, что используется 5 вольт)
+  Serial.print("Resistance0: ");
+  Serial.print(sensorValue);
+  Serial.println(" Ohm");
+  int t = r2t(&sensorValue);
   Serial.print("Temperature: ");
-  Serial.print(r2t(2238));
+  Serial.print(t);
   Serial.println(" C");
-  delay(1000); // Задержка для устранения эффекта "дребезга"
+  Serial.print("Resistance: ");
+  Serial.print(sensorValue);
+  Serial.println(" Ohm");
+  Serial.println("");
+  delay(4000); // Задержка для устранения эффекта "дребезга"
 }
