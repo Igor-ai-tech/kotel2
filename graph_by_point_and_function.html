@@ -102,7 +102,7 @@
         const input = document.getElementById("csvInput").value.trim();
         const lines = input.split('\n');
         const points = [];
-
+        resultPoints = [];
         for (let line of lines) {
             const [x, y] = line.trim().split(/\s+/).map(Number); // Разделение по пробелу или табуляции
             if (!isNaN(x) && !isNaN(y)) {
@@ -212,16 +212,14 @@
             }
         });
         let cppCode = `
-
-struct Point {
-    int x, y;
-};
-
-vector<Point> points = {
+const short shift =  `;
+        cppCode += ` ${resultPoints[0].x};
+`;
+        cppCode += `const int RESISTANCE_DTOJ[] = {
 `;
         // Добавление точек в C++ код
         resultPoints.forEach((point, i) => {
-            cppCode += `        {${point.x}, ${point.y}}${i < resultPoints.length - 1 ? ',' : ''}\n`;
+            cppCode += `        ${point.y}${i < resultPoints.length - 1 ? ',' : ''}\n`;
         });
 
         cppCode += `    };
