@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Строит график по точкам и по интерполирующей функции. </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+
+        input[type="number"] {
+            margin: 10px 0;
+        }
+
+        canvas {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+
+        .output {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<h2>В интерполирующую функцию подставляется значение, приходящее с ноги АЦП</h2>
+<h2>при сопротивлении подтягивающего резистора Pull-up resistor </h2>
+<h2>и генерирует код на C++ с массивом {[значение с АЦП], [температура, умноженная на Multiplier]}, </h2>
+
+
+<!-- Ввод точек кривой -->
+<p>Отсортированные по возрастанию <b>R</b> точки в формате <b>R</b><small>[пробел]</small><b>t</b> или <b>R</b><small>[tab]</small><b>t</b> по строкам (копипаст из Excel):</p>
+<textarea id="csvInput" placeholder="Enter points..."></textarea>
+
+<!-- Ввод функции -->
+<h2>JavaScript со страницы генерации апроксимирующей функции</h2>
+<textarea id="functionInput" placeholder="Enter a JavaScript function of x..."></textarea>
+
+<!-- Поля для задания начального, конечного значения и шага -->
+<h2>Границы значений, приходящие с АЦП и шаг:</h2>
+<h4> Рекомендованные значения: (Start = 0, End = 1024, Step = 1000, Pull-up = 1000, резистор Pull-up можно подобрать для
+    равномерного распределения. Multiplier = 10 или 100. Multiplier служит для экономии памяти, дабы хратить не float а int. Из ряда 10, 100, 1000 и т.д. )</h4>
+<table>
+    <tr>
+        <td>
+            <label for="startValue">Start:</label></td>
+        <td>
+            <input type="number" id="startValue" step="0.1" placeholder="Enter start value" value="0">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="endValue">End:</label></td>
+        <td>
+            <input type="number" id="endValue" step="0.1" placeholder="Enter end value" value="1024">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="stepValue">Step:</label></td>
+        <td>
+            <input type="number" id="stepValue" step="0.1" placeholder="Enter step value" value="1">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="RPullUp">Pull-up resistor:</label></td>
+        <td>
+            <input type="number" id="RPullUp" step="0.1" placeholder="Enter pull-up resistor" value="1000">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <label for="Multiplier">Multiplier:</label></td>
+        <td>
+            <input type="number" id="Multiplier" step="0.1" placeholder="Enter Multiplier" value="100">
+        </td>
+    </tr>
+</table>
+<button onclick="plotGraph()">Построить графики</button>
+<button onclick="copytext('cppCodeOutput')">Копировать код</button>
+<canvas id="curveChart" width="400" height="400"></canvas>
+<div class="output">
+    <h2>Generated C++ Code:</h2>
+    <pre id="cppCodeOutput"></pre>
+</div>
+
+<script>
+    let chart = null;
+    let resultPoints = [];
+
+    function plotGraph() {
+        // Получение точек из CSV
+        const input = document.getElementById("csvInput").value.trim();
+        const lines = input.split('\n');
+        const points = [];
+        resultPoints = [];
+        for (let line of lines) {
+            const [x, y] = line.trim().split(/\s+/).map(Number); // Разделение по пробелу или табуляции
+            if (!isNaN(x) && !isNaN(y)) {
+                points.push({x, y});
+            }
+        }
+
+        if (points.length < 2) {
+            alert("Please provide at least two valid points.");
+            return;
+        }
+
+        // Получение функции
+        const funcString = document.getElementById("functionInput").value.trim();
+        let func;
+        try {
+            func = new Function('x', 'return ' + funcString);
+            //      console.log('func = ' + func );
+        } catch (e) {
+            alert("Invalid function format. Please enter a valid JavaScript function.");
+            return;
+        }
+
+        // Получение начального, конечного значений и шага
+        const startValue = parseFloat(document.getElementById("startValue").value);
+        const endValue = parseFloat(document.getElementById("endValue").value);
+        const stepValue = parseFloat(document.getElementById("stepValue").value);
+        const RPullUp = parseFloat(document.getElementById("RPullUp").value);
+        const Multiplier = parseFloat(document.getElementById("Multiplier").value);
+
+        if (isNaN(startValue) || isNaN(endValue) || isNaN(stepValue) || stepValue <= 0) {
+            alert("Please provide valid start, end, and step values.");
+            return;
+        }
+
+        // Вычисление точек по функции
+        const functionPoints = [];
+        //    console.log('startValue = ' + startValue + "  endValue = " + endValue + "  stepValue = " + stepValue);
+        for (let x = startValue; x <= endValue; x += stepValue) {
+            let R = RPullUp * x / (1024 - x)
+            try {
+                const y = func(R);
+                console.log('x = ' + x + "  R = " + R + "  y = " + y);
+                if (typeof y === 'number' && !isNaN(y)) {
+                    functionPoints.push({x: R, y});
+                    resultPoints.push({x, y: Math.floor(y * Multiplier)});
+                    console.log('push x = ' + x + "   y = " + y + "   R = " + R);
+                }
+            } catch (e) {
+                alert("Error in function evaluation at x = " + x);
+                return;
+            }
+        }
+
+        // Построение графика
+        const ctx = document.getElementById('curveChart').getContext('2d');
+        if (chart) {
+            chart.clear();
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'График по точкам',
+                    data: points,
+                    fill: false,
+                    borderColor: 'blue',
+                    tension: 0.1
+                }, {
+                    label: 'Апроксимация',
+                    data: functionPoints,
+                    fill: false,
+                    borderColor: 'red',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'График для сверки значений по точкам и апроксимированных',                         color: 'green',
+                        font: {
+                            weight: 'bold',
+                            size: 16
+                        }
+                    }
+                },
+
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'X Axis'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Y Axis'
+                        }
+                    }
+                }
+            }
+        });
+        let cppCode = `
+const short shift =  `;
+        cppCode += ` ${resultPoints[0].x};
+`;
+        cppCode += `const int RESISTANCE_DTOJ[] = {
+`;
+        // Добавление точек в C++ код
+        resultPoints.forEach((point, i) => {
+            cppCode += `        ${point.y}${i < resultPoints.length - 1 ? ',' : ''}\n`;
+        });
+
+        cppCode += `    };
+`;
+
+        document.getElementById("cppCodeOutput").textContent = cppCode;
+    }
+
+    function copytext(containerid) {
+        if (document.selection) {
+            var range = document.body.createTextRange();
+            range.moveToElementText(document.getElementById(containerid));
+            range.select().createTextRange();
+            document.execCommand("copy");
+        } else if (window.getSelection) {
+            var range2 = document.createRange();
+            range2.selectNode(document.getElementById(containerid));
+            window.getSelection().addRange(range2);
+            document.execCommand("copy");
+            alert("C++ код скопирован")
+        }
+    }
+</script>
+</body>
+</html>
