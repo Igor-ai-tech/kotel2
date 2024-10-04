@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Апрксимация кривой с генерацией JavaScript</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        .output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Создаёт JavaScript апроксимирующий отрезками кривую, заданную точками.</h1>
+<h1>Код предназначен для копирования на страницу генерации таблицы АЦП - температура в </h1>
+<p>Отсортированные по возрастанию R точки в формате R[пробел]t или R[tab]t по строкам (копипаст из Excel):</p>
+<textarea id="pointsInput" placeholder="Enter points..."></textarea>
+<button onclick="generateJsCode()">генерация JavaScript</button>
+<button onclick="copytext('jsCodeOutput')">Копировать код</button>
+<div class="output">
+    <h2>JavaScript код:</h2>
+    <pre id="jsCodeOutput"></pre>
+</div>
+
+<script>
+    function generateJsCode() {
+        const input = document.getElementById("pointsInput").value.trim();
+        const lines = input.split('\n');
+        const points = [];
+
+        for (let line of lines) {
+            const [x, y] = line.trim().split(/\s+/).map(Number); // Разделение по пробелу или табуляции
+            if (!isNaN(x) && !isNaN(y)) {
+                points.push({ x, y });
+            }
+        }
+
+        if (points.length < 2) {
+            document.getElementById("jsCodeOutput").textContent = "Please provide at least two valid points.";
+            return;
+        }
+
+        let jsCode = `
+interpolate(x);
+function interpolate(x) {
+
+const points = [
+`;
+
+        points.forEach((point, i) => {
+            jsCode += `    { x: ${point.x}, y: ${point.y} }${i < points.length - 1 ? ',' : ''}\n`;
+        });
+
+        jsCode += `];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        if (x >= points[i].x && x <= points[i + 1].x) {
+            let t = (x - points[i].x) / (points[i + 1].x - points[i].x);
+            return points[i].y + t * (points[i + 1].y - points[i].y);
+        }
+    }
+     return null; // x is out of range
+}
+
+`;
+
+        document.getElementById("jsCodeOutput").textContent = jsCode;
+    }
+
+    function copytext(containerid) {
+        if (document.selection) {
+            var range = document.body.createTextRange();
+            range.moveToElementText(document.getElementById(containerid));
+            range.select().createTextRange();
+            document.execCommand("copy");
+        } else if (window.getSelection) {
+            var range = document.createRange();
+            range.selectNode(document.getElementById(containerid));
+            window.getSelection().addRange(range);
+            document.execCommand("copy");
+            alert("JavaScript код скопирован")
+        }
+    }
+</script>
+</body>
+</html>
