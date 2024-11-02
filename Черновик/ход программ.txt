@@ -1,0 +1,241 @@
+#define relay 13  // Определяем пин для реле как 13. Этот макрос будет заменен на число 13 в коде.
+// const int relay = 13; // Альтернативный вариант определения пина через переменную, но он закомментирован.
+
+bool relay_status = false;  // Переменная для хранения текущего состояния реле (включено или выключено).
+
+void setup() {
+  pinMode(relay, OUTPUT);  // Настраиваем пин реле как выходной.
+  digitalWrite(relay, LOW);  // Изначально реле выключено (LOW).
+}
+
+void loop() {
+  // Основной цикл программы, который выполняется бесконечно.
+  relay_on();  // Включаем реле с помощью функции relay_on.
+  delay(1000);  // Ждем 1 секунду.
+  
+  relay_switch(false);  // Выключаем реле с помощью функции relay_switch, передавая ей параметр false.
+  delay(1000);  // Ждем 1 секунду.
+}
+
+/*
+ Функция для переключения реле.
+*/
+void relay_switch(bool mode) {   
+  if (mode) {
+    digitalWrite(relay, HIGH);  // Если mode == true, включаем реле (HIGH).
+  } else {                      
+    digitalWrite(relay, LOW);  // Если mode == false, выключаем реле (LOW).
+  }
+  relay_status = mode;  // Обновляем переменную relay_status в соответствии с текущим состоянием реле.
+}
+
+void relay_on() {
+ 
+  relay_switch(true);  // Включаем реле через вызов функции relay_switch с параметром true.
+}
+==============================================================================================================================================================
+//#define не занимает память переменных
+
+#define rozgig_vent_delay 10000
+#define rozgig_trans_delay_pered 3000
+#define rozgig_trans_delay_posle 3000
+#define operational_delay 30
+#define rozgig_trans_pin 1
+#define klapan_zapal_pin 2
+#define DP_PIN 3
+
+void setup() {
+
+//инициализац. тр. розжига
+   pinMode(rozgig_trans_pin, OUTPUT);  // Настраиваем пин реле как выходной.
+   digitalWrite(rozgig_trans_pin, LOW);  // Изначально реле выключено (LOW).
+
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+}
+
+void rozgig() {
+delay(rozgig_vent_delay);
+relay_on(rozgig_trans_pin);
+delay(rozgig_trans_delay_pered);
+relay_on(klapan_zapal_pin);
+delay(rozgig_trans_delay_posle);
+relay_off(rozgig_trans_pin);
+delay(operational_delay);
+
+/*
+unsigned long currentMillis = millis();
+ while(millis()-currentMillis<=loopTime) {
+    if(условие)
+
+  действие
+  }
+*/
+}
+
+
+/*
+ Функция для переключения реле
+*/
+void relay_switch(bool mode, byte relay_pin) {   
+  if (mode) {
+    digitalWrite(relay_pin, HIGH);  // Если mode true, включаем реле (HIGH).
+  } else {                      
+    digitalWrite(relay_pin, LOW);  // Если mode false, выключаем реле (LOW).
+  }
+  //relay_status = mode;  // Обновляем переменную relay_status в соответствии с текущим состоянием реле.
+}
+
+void relay_on(byte relay_pin) { 
+  relay_switch(true, relay_pin);  // Включаем реле через вызов функции relay_switch с параметром true.
+}
+
+void relay_off(byte relay_pin) { 
+  relay_switch(false, relay_pin);  // Выключаем реле через вызов функции relay_switch с параметром true.
+}
+
+
+====================================================================================================================================================================
+Д/З
+====================================================================================================================================================================
+(коменты)
+
+//макросы #define не занимают памяти, так как просто заменяют значения в коде на этапе компиляции
+#define rozgig_vent_delay 10000         // Задержка включения перед розжигом
+#define rozgig_trans_delay_pered 3000   // Задержка перед включением  трансформатора перед зажиганием
+#define rozgig_trans_delay_posle 3000   // Задержка перед выключением трансформатора после зажигания
+#define operational_delay 30            // Операционная задержка для стабилизации после выполнения операций
+
+// Определение пинов
+#define rozgig_trans_pin 1              // Пин для управления трансформатором
+#define klapan_zapal_pin 2              // Пин для управления запальником
+#define DP_PIN 3                        // Пин     датчика пламени
+
+void setup() {
+    
+  pinMode(rozgig_trans_pin, OUTPUT);      // Настраиваем пин розжиг-трансформатора как выходной.
+  digitalWrite(rozgig_trans_pin, LOW);    // Устанавливаем начальное состояние пина розжига в LOW
+}
+
+void loop() {
+
+}
+
+// Функция розжига
+void rozgig() {
+  delay(rozgig_vent_delay);            // Ждём заданное время перед началом розжига, для вентиляции.
+  relay_on(rozgig_trans_pin);          // Включаем трансформатор розжига.
+  
+  delay(rozgig_trans_delay_pered);     // Ждём задержку перед открытием клапана запальника.
+  relay_on(klapan_zapal_pin);          // Открываем клапан запальника.
+
+  delay(rozgig_trans_delay_posle);     // Задержка после открытия клапана
+  relay_off(rozgig_trans_pin);         // Выключаем трансформатор розжига
+  
+  delay(operational_delay);            // Задержка для стабилизации.
+  
+  /*
+  unsigned long currentMillis = millis();
+  while(millis() - currentMillis <= loopTime) {
+    if(условие)
+      действие
+  }
+  */
+ 
+}
+
+// включая или отключая реле в зависимости от параметров
+void relay_switch(bool mode, byte relay_pin) {   
+  if (mode) {
+    digitalWrite(relay_pin, HIGH);  // Если mode true, включаем реле (HIGH).
+  } else {                      
+    digitalWrite(relay_pin, LOW);   // Если mode == false, выключаем реле (LOW).
+  }
+  // relay_status = mode;  // Здесь можно было бы обновить состояние реле, если это требуется для отслеживания.
+}
+
+// Вспомогательные функции для упрощённого включения/выключения реле.
+
+// Функция relay_on() вызывает relay_switch() с параметром true, что включает реле.
+void relay_on(byte relay_pin) { 
+  relay_switch(true, relay_pin);
+}
+
+// Функция relay_off() вызывает relay_switch() с параметром false, что выключает реле.
+void relay_off(byte relay_pin) { 
+  relay_switch(false, relay_pin);
+}
+
+====================================================================================================================================================================
+Д/З
+====================================================================================================================================================================
+(замена defan)
+
+// Макросы #define не занимают памяти, так как просто заменяют значения в коде на этапе компиляции
+#define ROZGIG_VENT_DELAY 10000         // Задержка включения перед розжигом
+#define ROZGIG_TRANS_DELAY_PERED 3000   // Задержка перед включением трансформатора перед зажиганием
+#define ROZGIG_TRANS_DELAY_POSLE 3000   // Задержка перед выключением трансформатора после зажигания
+#define OPERATIONAL_DELAY 30            // Операционная задержка для стабилизации после выполнения операций
+
+// Определение пинов
+#define ROZGIG_TRANS_PIN 1              // Пин для управления трансформатором
+#define KLAPAN_ZAPAL_PIN 2              // Пин для управления запальником
+#define DP_PIN 3                        // Пин датчика пламени
+
+void setup() {
+    
+  pinMode(ROZGIG_TRANS_PIN, OUTPUT);      // Настраиваем пин розжиг-трансформатора как выходной.
+  digitalWrite(ROZGIG_TRANS_PIN, LOW);    // Устанавливаем начальное состояние пина розжига в LOW
+}
+
+void loop() {
+
+}
+
+// Функция розжига
+void rozgig() {
+  delay(ROZGIG_VENT_DELAY);            // Ждём заданное время перед началом розжига, для вентиляции
+  relay_on(ROZGIG_TRANS_PIN);          // Включаем трансформатор розжига
+  
+  delay(ROZGIG_TRANS_DELAY_PERED);     // Ждём задержку перед открытием клапана запальника
+  relay_on(KLAPAN_ZAPAL_PIN);          // Открываем клапан запальника
+
+  delay(ROZGIG_TRANS_DELAY_POSLE);     // Задержка после открытия клапана
+  relay_off(ROZGIG_TRANS_PIN);         // Выключаем трансформатор розжига
+  
+  delay(OPERATIONAL_DELAY);            // Задержка для стабилизации
+  
+  /*
+  unsigned long currentMillis = millis();
+  while(millis() - currentMillis <= loopTime) {
+    if(условие)
+      действие
+  }
+  */
+ 
+}
+
+// Включение или отключение реле в зависимости от параметров
+void relay_switch(bool mode, byte relay_pin) {   
+  if (mode) {
+    digitalWrite(relay_pin, HIGH);  // Если mode true, включаем реле (HIGH)
+  } else {                      
+    digitalWrite(relay_pin, LOW);   // Если mode == false, выключаем реле (LOW)
+  }
+  // relay_status = mode;  // Здесь можно было бы обновить состояние реле, если это требуется для отслеживания
+}
+
+// Вспомогательные функции для упрощённого включения/выключения реле
+
+// Функция relay_on() вызывает relay_switch() с параметром true, что включает реле
+void relay_on(byte relay_pin) { 
+  relay_switch(true, relay_pin);
+}
+
+// Функция relay_off() вызывает relay_switch() с параметром false, что выключает реле
+void relay_off(byte relay_pin) { 
+  relay_switch(false, relay_pin);
+}
