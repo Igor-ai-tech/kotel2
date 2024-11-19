@@ -1,6 +1,6 @@
 
 // Макросы #define не занимают памяти, так как просто заменяют значения в коде на этапе компиляции
-#define CONTROLLER_VERSION '1.0'
+#define CONTROLLER_VERSION "1.0"
 
 #define ROZGIG_VENT_DELAY 10000         // Задержка включения перед розжигом
 #define ROZGIG_TRANS_DELAY_PERED 3000   // Задержка перед включением трансформатора перед зажиганием
@@ -11,14 +11,15 @@
 #define ROZGIG_ATTEMPT_COUNT 5          // Количество циклов запуска перед выводом аварии
 
 // Определение пинов
-#define ROZGIG_TRANS_PIN 1  // Пин для управления трансформатором
-#define KLAPAN_ZAPAL_PIN 2  // Пин для управления запальником
+#define ROZGIG_TRANS_PIN 10  // Пин для управления трансформатором
+#define KLAPAN_ZAPAL_PIN 11  // Пин для управления запальником
 #define DP_PIN 3            // Пин датчика пламени
 
 void setup() {
 
   Serial.begin(9600);
-  Serial.println('Kotel start. Version:' + CONTROLLER_VERSION); // Вывод сообщения
+  Serial.print("Kotel start. Version: ");
+  Serial.println( CONTROLLER_VERSION); // Вывод сообщения
   pinMode(ROZGIG_TRANS_PIN, OUTPUT);                            // Настраиваем пин розжиг-трансформатора как выходной.
   digitalWrite(ROZGIG_TRANS_PIN, LOW);                          // Устанавливаем начальное состояние пина розжига в LOW
   pinMode(DP_PIN, INPUT);
@@ -60,6 +61,7 @@ bool rozgig_attempt() {
 
   unsigned long currentMillis = millis();
   while (millis() - currentMillis <= ROZGIG_TIME_FLAME_CONTROL) {
+Serial.println("millis begin.");
     byte dp_count = 0;
     for (byte i = 0; i < DP_READ_COUNT; i++) {
       if (digitalRead(DP_PIN) == 1) {
@@ -69,18 +71,26 @@ bool rozgig_attempt() {
     }
     if (DP_READ_COUNT == dp_count) {
       return true;
+      Serial.println("millis() true.");
+
     }
   }
   return false;
+  Serial.println("millis() false.");
 }
 
 // Включение или отключение реле в зависимости от параметров
 void relay_switch(bool mode, byte relay_pin) {
+
+  Serial.println("relay_switch() begin.");
+
   if (mode) {
     digitalWrite(relay_pin, HIGH);  // Если mode true, включаем реле (HIGH)
   } else {
     digitalWrite(relay_pin, LOW);  // Если mode == false, выключаем реле (LOW)
+ Serial.println("relay_switch() end.");
   }
+  //закончился 
   // relay_status = mode;  // Здесь можно было бы обновить состояние реле, если это требуется для отслеживания
 }
 
